@@ -1,29 +1,26 @@
-﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
 using osu.Framework.Graphics.Sprites;
 using osu.Framework.Graphics;
 using osu.Framework.Testing;
 using osuTK.Graphics;
-using osu.Framework.Graphics.Lines;
 using osuTK;
-using System;
 using osu.Framework.Graphics.Containers;
+using osu.Framework.Graphics.Lines;
+using System;
 
 namespace osu.Framework.Tests.Visual.Drawables
 {
-    public partial class TestScenePathCapAngles : TestScene
+    public partial class TestSceneCube : TestScene
     {
-        private const int max_inner_steps = 9000;
-        private const int max_outer_steps = 3000;
-        private const float segment_length = 150f;
-
         private readonly Cube cube = new Cube
         {
             RelativeSizeAxes = Axes.Both,
             Anchor = Anchor.TopLeft,
             Size = new Vector3(0.5f, 0.5f, 0.5f),
             Colour = Color4.Red,
+            Position = new Vector3(50, 50, 100)
         };
 
         private readonly Path path = new Path { PathRadius = 12 };
@@ -32,10 +29,7 @@ namespace osu.Framework.Tests.Visual.Drawables
 
         private readonly Vector2 center = new Vector2(500f, 350f);
 
-        private int innerStep;
-        private int outerStep;
-
-        public TestScenePathCapAngles()
+        public TestSceneCube()
         {
             AddRange(new Drawable[]
             {
@@ -48,29 +42,36 @@ namespace osu.Framework.Tests.Visual.Drawables
                         outerText,
                     },
                 },
-                path,
-                cube,
+                new Camera
+                {
+                    RelativeSizeAxes = Axes.Both,
+                    Anchor = Anchor.Centre,
+                    Origin = Anchor.Centre,
+                    Children = new Drawable[]
+                    {
+                        cube,
+                        path
+                    },
+                },
             });
         }
+
+        private int timeStep = 0;
 
         protected override void Update()
         {
             base.Update();
+            float angle = timeStep * 0.001f;
+            cube.Rotation = Quaternion.FromEulerAngles(0f, angle, angle);
 
-            float innerAngle = MathHelper.TwoPi * innerStep / max_inner_steps;
-            float outerAngle = MathHelper.TwoPi * outerStep / max_outer_steps;
+            innerText.Text = "second euler angle: " + MathHelper.RadiansToDegrees(angle).ToString("000.000");
+            outerText.Text = "third euler angle: " + MathHelper.RadiansToDegrees(angle).ToString("000.000");
 
-            innerText.Text = "Inner angle: " + MathHelper.RadiansToDegrees(innerAngle).ToString("000.000");
-            outerText.Text = "Outer angle: " + MathHelper.RadiansToDegrees(outerAngle).ToString("000.000");
+            Vector2 inner = center + 40f * new Vector2(MathF.Cos(angle), MathF.Sin(angle));
 
-            Vector2 inner = center + segment_length * new Vector2(MathF.Cos(innerAngle), MathF.Sin(innerAngle));
-            Vector2 outer = inner + segment_length * new Vector2(MathF.Cos(outerAngle), MathF.Sin(outerAngle));
+            path.Vertices = new[] { center, inner };
 
-            path.Vertices = new[] { center, inner, outer, };
-            cube.Rotation = Quaternion.FromEulerAngles(0f, innerAngle, outerAngle);
-
-            innerStep = (innerStep + 1) % max_inner_steps;
-            outerStep = (outerStep + 1) % max_outer_steps;
+            timeStep = (timeStep + 1) % 3000;
         }
 
         private static SpriteText createLabel() => new SpriteText

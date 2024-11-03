@@ -150,5 +150,7 @@ namespace osu.Framework.Extensions.MatrixExtensions
             value.M32 = -d23 * det;
             value.M33 = +d33 * det;
         }
+
+        
     }
 }
